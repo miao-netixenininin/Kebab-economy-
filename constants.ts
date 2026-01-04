@@ -1,16 +1,22 @@
 
 export const KEBAB_PRICE_EURO = 5.00;
 
-export const EXCHANGE_RATES = {
+/**
+ * Tassi di cambio: Quante unità di valuta X servono per 1 EUR.
+ * Esempio: 1 EUR = 4.07 SAR
+ */
+export const EXCHANGE_RATES: Record<string, number> = {
   EUR: 1,
-  USD: 1.08,
-  GBP: 0.83
+  USD: 1.09,
+  GBP: 0.84,
+  SAR: 4.07
 };
 
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   EUR: '€',
   USD: '$',
   GBP: '£',
+  SAR: '﷼',
   KEBAB: '🌯',
   DROMEDARY: '🐪',
   BACTRIAN: '🐫'
@@ -41,9 +47,13 @@ export const INGREDIENT_ASSETS = [
 export const LIVESTOCK_ASSETS = [
   { id: 'majaheem', name: 'Al-Majaheem', basePrice: 4800.00, icon: '🐪' },
   { id: 'wadhah', name: 'Al-Wadhah', basePrice: 6500.00, icon: '🐫' },
-  { id: 'dromedary', name: 'Dromedario', basePrice: 2200.00, icon: '🐪' },
-  { id: 'bactrian', name: 'Bactriano', basePrice: 3500.00, icon: '🐫' },
-  { id: 'somali', name: 'Somalo', basePrice: 1400.00, icon: '🐪' },
+  { id: 'hamra', name: 'Al-Hamra', basePrice: 5200.00, icon: '🐪' },
+  { id: 'sofor', name: 'Al-Sofor', basePrice: 4900.00, icon: '🐪' },
+  { id: 'malha', name: 'Al-Malha', basePrice: 5800.00, icon: '🐫' },
+  { id: 'shual', name: 'Al-Shual', basePrice: 5500.00, icon: '🐪' },
+  { id: 'dromedary', name: 'Dromedario Standard', basePrice: 2200.00, icon: '🐪' },
+  { id: 'bactrian', name: 'Bactriano Reale', basePrice: 3500.00, icon: '🐫' },
+  { id: 'somali', name: 'Cammello Somalo', basePrice: 1400.00, icon: '🐪' },
   { id: 'mahari', name: 'Mahari Racing', basePrice: 12000.00, icon: '🏁' }
 ];
 
@@ -52,6 +62,7 @@ export const KEBAB_FACTORS = {
     { id: 'chicken', name: 'Pollo', mult: 1.0, icon: '🍗' },
     { id: 'beef', name: 'Manzo', mult: 1.25, icon: '🐄' },
     { id: 'lamb', name: 'Agnello', mult: 1.6, icon: '🐑' },
+    { id: 'turkey', name: 'Tacchino', mult: 1.15, icon: '🦃' },
     { id: 'seitan', name: 'Seitan', mult: 1.35, icon: '🌿' }
   ],
   FORMAT: [

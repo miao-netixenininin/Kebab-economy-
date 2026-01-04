@@ -5,30 +5,34 @@ import {
   KEBAB_MARKET_ASSETS, 
   LIVESTOCK_ASSETS, 
   INGREDIENT_ASSETS, 
-  EXCHANGE_RATES 
+  EXCHANGE_RATES,
+  CURRENCY_SYMBOLS
 } from '../constants';
 
 const Converter: React.FC = () => {
-  const { getFinalPrice, inventory, swapAssets, balance, specs } = useMarket();
+  // Fix: Removed 'specs' as it does not exist on MarketContextType
+  const { getFinalPrice, inventory, swapAssets, balance, t, currency, language } = useMarket();
   const [sourceAmount, setSourceAmount] = useState<string>('1');
   const [sourceAssetId, setSourceAssetId] = useState<string>('dromedary');
   const [targetAssetId, setTargetAssetId] = useState<string>('doner');
   const [swapStatus, setSwapStatus] = useState<'idle' | 'success' | 'error'>('idle');
 
   const allAssets = [
-    { id: 'EUR', name: 'Euro', icon: '€', type: 'fiat' },
-    { id: 'USD', name: 'Dollaro', icon: '$', type: 'fiat' },
-    { id: 'GBP', name: 'Sterlina', icon: '£', type: 'fiat' },
-    ...KEBAB_MARKET_ASSETS.map(a => ({ ...a, type: 'kebab' })),
-    ...LIVESTOCK_ASSETS.map(a => ({ ...a, type: 'livestock' })),
-    ...INGREDIENT_ASSETS.map(a => ({ ...a, type: 'ingredient' })),
+    { id: 'EUR', name: t('EUR'), icon: '€', type: 'fiat' },
+    { id: 'USD', name: t('USD'), icon: '$', type: 'fiat' },
+    { id: 'GBP', name: t('GBP'), icon: '£', type: 'fiat' },
+    { id: 'SAR', name: t('SAR'), icon: '﷼', type: 'fiat' },
+    ...KEBAB_MARKET_ASSETS.map(a => ({ ...a, name: t(a.id), type: 'kebab' })),
+    ...LIVESTOCK_ASSETS.map(a => ({ ...a, name: t(a.id), type: 'livestock' })),
+    ...INGREDIENT_ASSETS.map(a => ({ ...a, name: t(a.id), type: 'ingredient' })),
   ];
 
   const sourceAsset = allAssets.find(a => a.id === sourceAssetId) || allAssets[0];
   const targetAsset = allAssets.find(a => a.id === targetAssetId) || allAssets[4];
 
-  const sPrice = getFinalPrice(sourceAssetId);
-  const tPrice = getFinalPrice(targetAssetId);
+  // Fix: Added required second argument 'null' for location to getFinalPrice
+  const sPrice = getFinalPrice(sourceAssetId, null);
+  const tPrice = getFinalPrice(targetAssetId, null);
 
   const amountValue = parseFloat(sourceAmount) || 0;
   const resultValue = tPrice > 0 ? (amountValue * sPrice) / tPrice : 0;
@@ -44,8 +48,10 @@ const Converter: React.FC = () => {
     }
   };
 
-  const isFiat = ['EUR', 'USD', 'GBP'].includes(sourceAssetId);
+  const isFiat = EXCHANGE_RATES[sourceAssetId] !== undefined;
   const userHasEnough = isFiat ? (balance >= amountValue * sPrice) : ((inventory[sourceAssetId] || 0) >= amountValue);
+
+  const displayPrice = (p: number) => (p * EXCHANGE_RATES[currency]).toLocaleString(language, { maximumFractionDigits: 2 }) + CURRENCY_SYMBOLS[currency];
 
   return (
     <div className="bg-white rounded-[40px] shadow-2xl p-10 border border-orange-100 relative overflow-hidden group">
@@ -57,13 +63,13 @@ const Converter: React.FC = () => {
             💱
           </div>
           <div>
-            <h2 className="text-2xl font-black text-gray-900 leading-none">Terminale Swap</h2>
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Cambio Diretto Configurato</p>
+            <h2 className="text-2xl font-black text-gray-900 leading-none">{t('swapTerminal')}</h2>
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">v10.0 Global Standard</p>
           </div>
         </div>
         {inventory[sourceAssetId] !== undefined && (
           <div className="bg-orange-50 px-4 py-2 rounded-2xl border border-orange-100">
-             <span className="text-[9px] font-black text-orange-400 uppercase block tracking-tighter">Il tuo Saldo</span>
+             <span className="text-[9px] font-black text-orange-400 uppercase block tracking-tighter">{t('balance')}</span>
              <span className="text-sm font-black text-orange-600 tabular-nums">{(inventory[sourceAssetId] || 0).toFixed(2)} {sourceAsset.icon}</span>
           </div>
         )}
@@ -73,8 +79,8 @@ const Converter: React.FC = () => {
         {/* Source Input */}
         <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100 transition-all focus-within:ring-2 focus-within:ring-orange-200">
           <div className="flex justify-between items-center mb-4">
-            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">Cedi Beni</label>
-            <span className="text-[8px] font-black text-gray-300 uppercase">Valutazione: {sPrice.toFixed(2)}€</span>
+            <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{t('cedi')}</label>
+            <span className="text-[8px] font-black text-gray-300 uppercase">{displayPrice(sPrice)}</span>
           </div>
           <div className="flex items-center gap-4">
             <input 
@@ -111,12 +117,12 @@ const Converter: React.FC = () => {
         {/* Target Output */}
         <div className="bg-gray-900 rounded-3xl p-8 text-white shadow-2xl shadow-gray-300 transition-all">
           <div className="flex justify-between items-center mb-4">
-            <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Ricevi Beni</label>
-            <span className="text-[8px] font-black text-gray-500 uppercase">Valutazione: {tPrice.toFixed(2)}€</span>
+            <label className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">{t('ricevi')}</label>
+            <span className="text-[8px] font-black text-gray-500 uppercase">{displayPrice(tPrice)}</span>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-4xl font-black tabular-nums truncate w-full text-orange-500">
-              {resultValue.toLocaleString('it-IT', { maximumFractionDigits: 3 })}
+              {resultValue.toLocaleString(language, { maximumFractionDigits: 3 })}
             </div>
             <select 
               value={targetAssetId}
@@ -135,20 +141,8 @@ const Converter: React.FC = () => {
             ${swapStatus === 'success' ? 'bg-green-500' : swapStatus === 'error' ? 'bg-red-500' : 'bg-orange-600 hover:bg-orange-500 active:scale-95 disabled:opacity-30 disabled:grayscale'}
           `}
         >
-          {swapStatus === 'success' ? 'SCAMBIO COMPLETATO!' : swapStatus === 'error' ? 'FONDI INSUFFICIENTI' : userHasEnough ? `SCAMBIA ${sourceAsset.icon} CON ${targetAsset.icon}` : 'ASSET INSUFFICIENTI'}
+          {swapStatus === 'success' ? 'SUCCESS ✓' : swapStatus === 'error' ? 'ERROR ✕' : userHasEnough ? t('execute') : 'LOW BALANCE'}
         </button>
-      </div>
-
-      {/* Info dinamiche sul setup corrente */}
-      <div className="mt-8 pt-8 border-t border-gray-100 grid grid-cols-2 gap-4">
-        <div className="flex flex-col">
-          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Configurazione Carne</span>
-          <span className="text-[10px] font-bold text-gray-700">{specs.kebab.protein.icon} {specs.kebab.protein.name} x{specs.kebab.format.name}</span>
-        </div>
-        <div className="flex flex-col text-right">
-          <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest">Configurazione Bestiame</span>
-          <span className="text-[10px] font-bold text-gray-700">{specs.camel.gender.icon} {specs.camel.use.name}</span>
-        </div>
       </div>
     </div>
   );

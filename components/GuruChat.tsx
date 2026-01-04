@@ -1,8 +1,10 @@
 
 import React, { useState } from 'react';
 import { kebabGuru } from '../services/geminiService';
+import { useMarket } from '../context/MarketContext';
 
 const GuruChat: React.FC = () => {
+  const { t } = useMarket();
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,8 +24,8 @@ const GuruChat: React.FC = () => {
           👳‍♂️
         </div>
         <div>
-          <h2 className="text-2xl font-bold">Chiedi al Guru</h2>
-          <p className="text-orange-100 text-sm">Saggezza finanziaria a base di carne.</p>
+          <h2 className="text-2xl font-bold">{t('guru_title')}</h2>
+          <p className="text-orange-100 text-sm">{t('guru_subtitle')}</p>
         </div>
       </div>
 
@@ -34,7 +36,7 @@ const GuruChat: React.FC = () => {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
-            placeholder="Esempio: Vale la pena investire in 100 Kebab?"
+            placeholder={t('guru_placeholder')}
             className="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-white/20 outline-none placeholder:text-orange-200 transition-all text-lg"
           />
           <button
@@ -42,7 +44,7 @@ const GuruChat: React.FC = () => {
             disabled={loading}
             className="absolute right-2 top-2 bottom-2 bg-white text-orange-600 px-6 rounded-xl font-bold hover:bg-orange-50 disabled:opacity-50 transition-colors"
           >
-            {loading ? '...' : 'Chiedi'}
+            {loading ? '...' : t('guru_ask')}
           </button>
         </div>
 
