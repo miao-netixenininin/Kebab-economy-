@@ -1,0 +1,120 @@
+
+import React, { useState } from 'react';
+
+interface MinigamesProps {
+  onWin: (amount: number) => void;
+}
+
+const Minigames: React.FC<MinigamesProps> = ({ onWin }) => {
+  const [clickCount, setClickCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [bonusClaimed, setBonusClaimed] = useState(false);
+
+  const handleClick = () => {
+    setClickCount(prev => prev + 1);
+    setIsAnimating(true);
+    setTimeout(() => setIsAnimating(false), 100);
+    
+    // Guadagna 0.05€ ogni click
+    onWin(0.05);
+
+    if (clickCount > 0 && clickCount % 20 === 0) {
+      // Bonus ogni 20 click
+      onWin(1.00);
+    }
+  };
+
+  const claimBonus = () => {
+    if (!bonusClaimed) {
+      onWin(5.00);
+      setBonusClaimed(true);
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+      {/* Kebab Clicker Game */}
+      <div className="bg-white rounded-3xl shadow-xl p-10 border border-orange-100 flex flex-col items-center text-center">
+        <div className="mb-2">
+          <span className="bg-orange-100 text-orange-600 text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest">Minigioco Attivo</span>
+        </div>
+        <h2 className="text-3xl font-black text-gray-800 mb-2">Kebab Clicker Pro</h2>
+        <p className="text-gray-400 text-sm mb-8">Affetta il rotolo per generare profitto immediato!</p>
+        
+        <div className="relative mb-10 cursor-pointer group" onClick={handleClick}>
+          <div className={`text-[120px] transition-transform duration-75 select-none ${isAnimating ? 'scale-90 rotate-3' : 'scale-100 group-hover:scale-110'}`}>
+            🌯
+          </div>
+          <div className="absolute -top-4 -right-4 bg-orange-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-black shadow-lg">
+            +5¢
+          </div>
+        </div>
+
+        <div className="w-full bg-gray-50 rounded-2xl p-6">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold text-gray-400 uppercase">Progresso Livello</span>
+            <span className="text-xs font-black text-orange-600">{clickCount % 20}/20 click al bonus</span>
+          </div>
+          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-orange-500 transition-all duration-300" 
+              style={{ width: `${(clickCount % 20) / 20 * 100}%` }}
+            ></div>
+          </div>
+        </div>
+        
+        <p className="mt-4 text-[10px] text-gray-300 font-mono italic">Ogni click genera 0.05€ reali (nel metaverso del kebab).</p>
+      </div>
+
+      {/* Bonus & Trading center */}
+      <div className="space-y-8">
+        <div className="bg-gradient-to-br from-gray-900 to-black rounded-3xl p-8 text-white shadow-2xl">
+          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <span className="text-2xl">🎁</span> Bonus Fondi Speculativi
+          </h3>
+          <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            Ricevi un'iniezione di capitale una tantum per iniziare la tua scalata ai mercati internazionali del bestiame.
+          </p>
+          <button 
+            disabled={bonusClaimed}
+            onClick={claimBonus}
+            className={`w-full py-4 rounded-2xl font-black transition-all ${bonusClaimed ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-orange-600 hover:bg-orange-500 shadow-lg shadow-orange-900/20'}`}
+          >
+            {bonusClaimed ? 'RISCATTATO ✓' : 'RISCATTA 5.00€'}
+          </button>
+        </div>
+
+        <div className="bg-white rounded-3xl p-8 border border-orange-100 shadow-xl">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <span className="text-2xl">🎯</span> Obiettivi Finanziari
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 opacity-50">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-xl">🍟</div>
+              <div>
+                <div className="text-sm font-bold text-gray-800">Magnate delle Patatine</div>
+                <div className="text-[10px] text-gray-400 uppercase">Acquista 50 porzioni</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 opacity-50">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-xl">🐪</div>
+              <div>
+                <div className="text-sm font-bold text-gray-800">Re dei Dromedari</div>
+                <div className="text-[10px] text-gray-400 uppercase">Possiedi 1 Dromedario</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 opacity-50">
+              <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-xl">💸</div>
+              <div>
+                <div className="text-sm font-bold text-gray-800">Milionario della Cipolla</div>
+                <div className="text-[10px] text-gray-400 uppercase">Saldo &gt; 1.000.000€</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Minigames;
