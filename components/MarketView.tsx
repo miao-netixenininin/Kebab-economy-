@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useMarket } from '../context/MarketContext';
 import { 
   KEBAB_MARKET_ASSETS, 
@@ -44,6 +44,7 @@ const MarketView: React.FC = () => {
             <span key={a.id} className="text-orange-400">{a.icon} {t(a.id)}: {displayPrice(getFinalPrice(a.id, buyLoc, kebabSpec))}</span>
           ))}
           <span className="text-amber-500">🐫 CAMEL AUCTIONS HOT IN RIYADH</span>
+          <span className="text-green-500">🧅 ONION FUTURES RISING</span>
         </div>
       </div>
 
@@ -70,7 +71,7 @@ const MarketView: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Kebab Buy Section */}
               <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -86,7 +87,7 @@ const MarketView: React.FC = () => {
                     <div className="text-2xl font-black text-blue-600">{displayPrice(getFinalPrice(buyKebab.id, buyLoc, kebabSpec))}</div>
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[8px] font-black text-gray-400 uppercase">Carne / Proteina</label>
+                    <label className="text-[8px] font-black text-gray-400 uppercase">Carne</label>
                     <select 
                       value={kebabSpec.protein.id}
                       onChange={(e) => setKebabSpec(prev => ({ ...prev, protein: KEBAB_FACTORS.PROTEIN.find(p => p.id === e.target.value)! }))}
@@ -136,6 +137,27 @@ const MarketView: React.FC = () => {
                   {t('buy')}
                 </button>
               </div>
+
+              {/* Raw Goods Buy Section */}
+              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-4">{t('raw_goods')}</div>
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {INGREDIENT_ASSETS.map(a => (
+                    <button key={a.id} onClick={() => setBuyIng(a)} className={`w-full aspect-square rounded-xl text-lg flex items-center justify-center transition-all ${buyIng.id === a.id ? 'bg-blue-500 text-white scale-105 shadow-md' : 'bg-white grayscale hover:grayscale-0 shadow-sm'}`} title={t(a.id)}>
+                      {a.icon}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex-grow">
+                    <h4 className="text-sm font-black text-gray-800 uppercase">{t(buyIng.id)}</h4>
+                    <div className="text-xl font-black text-blue-600">{displayPrice(getFinalPrice(buyIng.id, buyLoc))}</div>
+                  </div>
+                </div>
+                <button onClick={() => buyAsset(buyIng.id, getFinalPrice(buyIng.id, buyLoc))} className="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-md active:scale-95 transition-transform">
+                  {t('buy')}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -161,7 +183,7 @@ const MarketView: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Kebab Sell Section */}
               <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -175,21 +197,12 @@ const MarketView: React.FC = () => {
                   <div className="flex-grow">
                     <h4 className="text-lg font-black text-gray-800">{t(sellKebab.id)}</h4>
                     <div className="flex items-center gap-2">
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Inventario: {inventory[sellKebab.id] || 0}</span>
+                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">In Stock: {inventory[sellKebab.id] || 0}</span>
                     </div>
                     <div className="text-2xl font-black text-orange-600">{displayPrice(getFinalPrice(sellKebab.id, sellLoc, kebabSpec))}</div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <select 
-                      value={kebabSpec.protein.id}
-                      onChange={(e) => setKebabSpec(prev => ({ ...prev, protein: KEBAB_FACTORS.PROTEIN.find(p => p.id === e.target.value)! }))}
-                      className="bg-white border border-orange-100 rounded-lg px-2 py-1 text-[10px] font-black uppercase text-gray-500 outline-none shadow-sm"
-                    >
-                      {KEBAB_FACTORS.PROTEIN.map(p => <option key={p.id} value={p.id}>{p.icon} {t(p.id)}</option>)}
-                    </select>
-                  </div>
                 </div>
-                <button onClick={() => sellAsset(sellKebab.id, getFinalPrice(sellKebab.id, sellLoc, kebabSpec))} className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-orange-200 active:scale-95 transition-transform disabled:opacity-30" disabled={!inventory[sellKebab.id]}>
+                <button onClick={() => sellAsset(sellKebab.id, getFinalPrice(sellKebab.id, sellLoc, kebabSpec))} className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-orange-200 active:scale-95 transition-transform disabled:opacity-30 disabled:grayscale" disabled={!inventory[sellKebab.id]}>
                   {t('sell')}
                 </button>
               </div>
@@ -207,28 +220,36 @@ const MarketView: React.FC = () => {
                   <div className="flex-grow">
                     <h4 className="text-lg font-black text-gray-800">{t(sellCamel.id)}</h4>
                     <div className="flex items-center gap-2">
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">Inventario: {inventory[sellCamel.id] || 0}</span>
+                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">In Stock: {inventory[sellCamel.id] || 0}</span>
                     </div>
                     <div className="text-2xl font-black text-orange-600">{displayPrice(getFinalPrice(sellCamel.id, sellLoc, camelSpec))}</div>
                   </div>
-                  <div className="flex flex-col gap-2">
-                    <select 
-                        value={camelSpec.gender.id}
-                        onChange={(e) => setCamelSpec(prev => ({ ...prev, gender: CAMEL_FACTORS.GENDER.find(g => g.id === e.target.value)! }))}
-                        className="bg-white border border-orange-100 rounded-lg px-2 py-1 text-[9px] font-black uppercase text-gray-500 outline-none shadow-sm"
-                      >
-                        {CAMEL_FACTORS.GENDER.map(g => <option key={g.id} value={g.id}>{g.icon} {t(g.id)}</option>)}
-                     </select>
-                     <select 
-                        value={camelSpec.use.id}
-                        onChange={(e) => setCamelSpec(prev => ({ ...prev, use: CAMEL_FACTORS.USE.find(u => u.id === e.target.value)! }))}
-                        className="bg-white border border-orange-100 rounded-lg px-2 py-1 text-[9px] font-black uppercase text-gray-500 outline-none shadow-sm"
-                      >
-                        {CAMEL_FACTORS.USE.map(u => <option key={u.id} value={u.id}>{u.icon} {t(u.id)}</option>)}
-                     </select>
+                </div>
+                <button onClick={() => sellAsset(sellCamel.id, getFinalPrice(sellCamel.id, sellLoc, camelSpec))} className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-orange-200 active:scale-95 transition-transform disabled:opacity-30 disabled:grayscale" disabled={!inventory[sellCamel.id]}>
+                  {t('sell')}
+                </button>
+              </div>
+
+              {/* Raw Goods Sell Section */}
+              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                <div className="text-[9px] font-black text-orange-400 uppercase tracking-widest mb-4">{t('raw_goods')}</div>
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {INGREDIENT_ASSETS.map(a => (
+                    <button key={a.id} onClick={() => setSellIng(a)} className={`w-full aspect-square rounded-xl text-lg flex items-center justify-center transition-all ${sellIng.id === a.id ? 'bg-orange-500 text-white scale-105 shadow-md' : 'bg-white grayscale hover:grayscale-0 shadow-sm'}`} title={t(a.id)}>
+                      {a.icon}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex-grow">
+                    <h4 className="text-sm font-black text-gray-800 uppercase">{t(sellIng.id)}</h4>
+                    <div className="flex items-center gap-2">
+                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">In Stock: {inventory[sellIng.id] || 0}</span>
+                    </div>
+                    <div className="text-xl font-black text-orange-600">{displayPrice(getFinalPrice(sellIng.id, sellLoc))}</div>
                   </div>
                 </div>
-                <button onClick={() => sellAsset(sellCamel.id, getFinalPrice(sellCamel.id, sellLoc, camelSpec))} className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-orange-200 active:scale-95 transition-transform disabled:opacity-30" disabled={!inventory[sellCamel.id]}>
+                <button onClick={() => sellAsset(sellIng.id, getFinalPrice(sellIng.id, sellLoc))} className="w-full bg-orange-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-md active:scale-95 transition-transform disabled:opacity-30 disabled:grayscale" disabled={!inventory[sellIng.id]}>
                   {t('sell')}
                 </button>
               </div>

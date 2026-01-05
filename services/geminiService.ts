@@ -16,24 +16,20 @@ export class KebabGuruService {
     
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     try {
-      const prompt = `ANALISI DI MERCATO REALE - ASSET: KEBAB E CAMMELLI.
-      Data simulata: ${currentDate}.
+      const prompt = `RICERCA DI MERCATO REALE - DATA ATTUALE: ${currentDate}.
+      Trova i prezzi reali correnti per i seguenti indicatori:
+      1. Prezzo medio di un Döner Kebab a Berlino (cerca "Dönerpreis Berlin 2024 2025" o "Kebab price Germany").
+      2. Prezzo medio di un cammello da allevamento o dromedario nei mercati di Riyadh o Dubai (cerca "Camel price Saudi Arabia" o "Livestock auction UAE").
       
-      Esegui una ricerca su siti specializzati, forum di settore e dati storici (anche non recentissimi) per trovare:
-      1. Il prezzo reale del Döner Kebab a Berlino (cerca "Dönerpreis index" o "Prezzo kebab Germania").
-      2. Quotazioni di mercato per i cammelli (cerca "Camel market prices Riyadh", "Livestock auction Dubai").
+      Restituisci ESATTAMENTE questo formato nel testo della risposta, senza markdown:
+      VALORE_REALE_BERLINO: [prezzo numerico in EUR, es: 7.50]
+      VALORE_REALE_CAMMELLO: [prezzo numerico in EUR, es: 2800]
+      NOTE: [Una breve spiegazione dei dati trovati, es: 'Aumento del 10% a Kreuzberg' o 'Asta record a Riyadh']
       
-      IMPORTANTE: Ignora la politica monetaria generale. Concentrati sui dati dei chioschi e delle aste di bestiame.
-      
-      Restituisci questo formato preciso:
-      VALORE_REALE_BERLINO: [prezzo in euro, es. 7.20]
-      VALORE_REALE_CAMMELLO: [prezzo medio in euro, es. 2500]
-      NOTE: [Dati trovati nelle ricerche correlate o siti di settore]
-      
-      Usa i dati delle ricerche correlate per estrapolare un trend realistico.`;
+      Usa Google Search per trovare i dati più recenti disponibili online.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-pro-preview', // Uso Pro per maggiore precisione nella ricerca
         contents: prompt,
         config: {
           tools: [{ googleSearch: {} }],
@@ -43,7 +39,7 @@ export class KebabGuruService {
       const text = response.text || "";
       const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
       const sources = chunks.map((chunk: any) => ({
-        title: chunk.web?.title || "Dati di Mercato Certificati",
+        title: chunk.web?.title || "Fonte Mercato Certificata",
         uri: chunk.web?.uri || "#"
       })).filter((s: any) => s.uri !== "#");
 
@@ -59,18 +55,13 @@ export class KebabGuruService {
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     try {
-      const prompt = `CRONACA SETTORIALE - KEBAB & LIVESTOCK.
-      Cerca notizie reali (anche degli ultimi anni) su:
-      - Festival del Kebab, record mondiali di Döner, o proteste locali sui prezzi (Dönerpreisbremse).
-      - Aste di cammelli di bellezza negli Emirati, gare di dromedari, o mercati di bestiame famosi.
-      - Innovazione tecnologica nei chioschi o nelle stalle.
+      const prompt = `NEWS SETTORIALI - KEBAB & LIVESTOCK.
+      Cerca notizie reali dell'ultimo anno su:
+      - Tendenze gastronomiche kebab, festival, o variazioni di prezzo famose (es. Dönerpreisbremse).
+      - Mercati di cammelli, gare di mahari, o fiere del bestiame in Medio Oriente.
       
-      EVITA: Politica generale, tassi di interesse, macroeconomia pura.
-      
-      FORMATO JSON:
-      [{ "headline": "Titolo Notizia", "summary": "Sintesi", "source": "Nome Sito/Testata", "impact": "up/down/neutral", "date": "Data", "url": "URL" }]
-      
-      Usa fonti come "The National News", "Spiegel", o siti locali di Berlino e Dubai.`;
+      Restituisci un array JSON di 3-4 oggetti con:
+      [{ "headline": "Titolo", "summary": "Sintesi", "source": "Sito", "impact": "up/down/neutral", "date": "Data", "url": "Link" }]`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',

@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { KEBAB_MARKET_ASSETS, LIVESTOCK_ASSETS, INGREDIENT_ASSETS, EXCHANGE_RATES } from '../constants';
 import { kebabGuru, NewsItem } from '../services/geminiService';
@@ -72,7 +73,8 @@ const translations: Record<Language, Record<string, string>> = {
     chicken: "Pollo", beef: "Manzo", lamb: "Agnello", turkey: "Tacchino", seitan: "Seitan", bread: "Pita", wrap: "Wrap", plate: "Piatto",
     berlin: "Berlino", istanbul: "Istanbul", rome: "Roma", london: "Londra", ny: "New York", cairo: "Il Cairo",
     male: "Maschio", female: "Femmina", work: "Lavoro", racing: "Corsa", beauty: "Bellezza",
-    somalia: "Somalia", saudi: "Riyadh", uae: "Dubai", EUR: "Euro", USD: "Dollaro", GBP: "Sterlina", SAR: "Riyal"
+    somalia: "Somalia", saudi: "Riyadh", uae: "Dubai", EUR: "Euro", USD: "Dollaro", GBP: "Sterlina", SAR: "Riyal",
+    raw_goods: "Materie Prime"
   },
   en: {
     dashboard: "Dashboard", exchange: "Exchange", play: "Play", portfolio: "Total Assets",
@@ -97,7 +99,8 @@ const translations: Record<Language, Record<string, string>> = {
     chicken: "Chicken", beef: "Beef", lamb: "Lamb", turkey: "Turkey", seitan: "Seitan", bread: "Pita", wrap: "Wrap", plate: "Plate",
     berlin: "Berlin", istanbul: "Istanbul", rome: "Rome", london: "London", ny: "New York", cairo: "Cairo",
     male: "Male", female: "Female", work: "Work", racing: "Racing", beauty: "Beauty",
-    somalia: "Somalia", saudi: "Riyadh", uae: "Dubai", EUR: "Euro", USD: "Dollar", GBP: "Pound", SAR: "Riyal"
+    somalia: "Somalia", saudi: "Riyadh", uae: "Dubai", EUR: "Euro", USD: "Dollar", GBP: "Pound", SAR: "Riyal",
+    raw_goods: "Commodities"
   },
   de: {
     dashboard: "Dashboard", exchange: "Börse", play: "Minispiel", portfolio: "Gesamtvermögen",
@@ -111,7 +114,7 @@ const translations: Record<Language, Record<string, string>> = {
     bonus_title: "Kapitalinjektion", bonus_desc: "Spekulative Mittel.",
     goals_title: "Ziele", goal_chips: "Salzbaron", goal_chips_desc: "50 Portionen",
     goal_camel: "Kamel Emir", goal_camel_desc: "Besitze einen Al-Wadhah", goal_onion: "Döner Tycoon",
-    goal_onion_desc: "Vermögen > 1.000€", about_p1: "Kebab Economy™ ist mehr als nur Software.",
+    goal_onion_desc: "Vermögen > 1.000€", about_p1: "Kebab Economy™ ist più che una semplice software.",
     about_p2: "Dank Gemini 3 haben wir die Märkte im Blick.",
     market_analysis: "Marktanalyse", balance: "Liquidität", footer_original: "KEBAB ECONOMY ORIGINAL - EST. 2026",
     doner: "Döner Kebab", shish: "Schaschlik", adana: "Adana Kebab", durum: "Dürüm",
@@ -122,7 +125,8 @@ const translations: Record<Language, Record<string, string>> = {
     chicken: "Hähnchen", beef: "Rind", lamb: "Lamm", turkey: "Truthahn", seitan: "Seitan", bread: "Pita", wrap: "Dürüm", plate: "Teller",
     berlin: "Berlin", istanbul: "Istanbul", rome: "Rom", london: "London", ny: "New York", cairo: "Kairo",
     male: "Männlich", female: "Weiblich", work: "Arbeit", racing: "Rennen", beauty: "Schönheit",
-    somalia: "Somalia", saudi: "Riyadh", uae: "Dubai", EUR: "Euro", USD: "Dollar", GBP: "Pfund", SAR: "Riyal"
+    somalia: "Somalia", saudi: "Riyadh", uae: "Dubai", EUR: "Euro", USD: "Dollar", GBP: "Pfund", SAR: "Riyal",
+    raw_goods: "Rohstoffe"
   },
   ar: {
     dashboard: "لوحة القيادة", exchange: "البورصة", play: "لعبة", portfolio: "إجمالي الأصول",
@@ -131,7 +135,7 @@ const translations: Record<Language, Record<string, string>> = {
     buy: "شراء", sell: "بيع", buyingTerminal: "سوق المصدر", sellingTerminal: "سوق الهدف",
     marketNews: "أخبار القطاع", aboutVision: "الكتاب الأبيض", apiWarning: "مفتاح API مطلوب",
     stats_ticker: "مؤشر السوق", stats_update: "تحديث 15 ثانية", stats_verified: "بيانات موثقة",
-    clicker_title: "ماستر سلايسر برو", clicker_subtitle: "حسّن القطع!",
+    clicker_title: "ماستر سلايسer برو", clicker_subtitle: "حسّن القطع!",
     clicker_bonus: "للشريحة القادمة", bonus_claim: "مكافأة 5.00€", bonus_claimed: "نشط ✓",
     bonus_title: "ضخ رأس المال", bonus_desc: "أموال للمضاربة.",
     goals_title: "الأهداف", goal_chips: "بارون الملح", goal_chips_desc: "إدارة 50 حصة",
@@ -147,7 +151,8 @@ const translations: Record<Language, Record<string, string>> = {
     chicken: "دجاج", beef: "لحم بقر", lamb: "لحم ضأن", turkey: "ديك رومي", seitan: "سيتان", bread: "بيتا", wrap: "لفافة", plate: "طبق",
     berlin: "برلين", istanbul: "إسطنبول", rome: "روما", london: "لندن", ny: "نيويورك", cairo: "القاهرة",
     male: "ذكر", female: "أنثى", work: "عمل", racing: "سباق", beauty: "جمال",
-    somalia: "الصومال", saudi: "الرياض", uae: "دبي", EUR: "يورو", USD: "دولار", GBP: "جنيه إسترليني", SAR: "ريال"
+    somalia: "الصومال", saudi: "الرياض", uae: "دبي", EUR: "يورو", USD: "دولار", GBP: "جنيه إسترليني", SAR: "ريال",
+    raw_goods: "المواد الخام"
   }
 };
 
@@ -243,7 +248,9 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (EXCHANGE_RATES[id]) return 1 / EXCHANGE_RATES[id];
     const isKebab = KEBAB_MARKET_ASSETS.some(a => a.id === id);
     const isCamel = LIVESTOCK_ASSETS.some(a => a.id === id);
+    const isIng = INGREDIENT_ASSETS.some(a => a.id === id);
     const locMult = location ? location.mult : 1.0;
+
     if (isKebab) {
       const base = marketState.kebabPrices[id] || 5;
       const prot = assetSpecs?.protein?.mult || 1.0;
@@ -255,7 +262,11 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const u = assetSpecs?.use?.mult || 1.0;
       return base * g * u * locMult;
     }
-    return marketState.ingredientPrices[id] || 0.5;
+    if (isIng) {
+      const base = marketState.ingredientPrices[id] || 0.5;
+      return base * locMult;
+    }
+    return 0.5;
   };
 
   const syncWithReality = async () => {
@@ -265,22 +276,48 @@ export const MarketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         kebabGuru.fetchRealMarketPrices(currentDate),
         kebabGuru.fetchSectorNews(currentDate)
       ]);
-      if (newsData) setNews(newsData);
+      
+      if (newsData && newsData.length > 0) setNews(newsData);
+      
       if (priceData) {
+        // Regex robuste per estrarre i valori dal testo libero di Gemini
         const kMatches = priceData.text.match(/VALORE_REALE_BERLINO:\s*(\d+\.?\d*)/);
         const cMatches = priceData.text.match(/VALORE_REALE_CAMMELLO:\s*(\d+\.?\d*)/);
-        let kRatio = kMatches ? parseFloat(kMatches[1]) / 5.0 : 1.0;
-        let cRatio = cMatches ? parseFloat(cMatches[1]) / 2200.0 : 1.0;
+        
+        let realKebabVal = kMatches ? parseFloat(kMatches[1]) : 5.0;
+        let realCamelVal = cMatches ? parseFloat(cMatches[1]) : 2200.0;
+        
+        // Calcolo dei coefficienti rispetto ai prezzi base del sistema
+        let kRatio = realKebabVal / 5.0;
+        let cRatio = realCamelVal / 2200.0;
+        
         setMarketState(prev => ({
           ...prev,
           kebabPrices: Object.fromEntries(KEBAB_MARKET_ASSETS.map(a => [a.id, a.basePrice * kRatio])),
-          livestockPrices: Object.fromEntries(LIVESTOCK_ASSETS.map(a => [a.id, a.basePrice * cRatio]))
+          livestockPrices: Object.fromEntries(LIVESTOCK_ASSETS.map(a => [a.id, a.basePrice * cRatio])),
+          ingredientPrices: Object.fromEntries(INGREDIENT_ASSETS.map(a => [a.id, a.basePrice * kRatio])) // Gli ingredienti seguono il trend del kebab
         }));
+        
         setIsRealMode(true);
         setLastSync(new Date().toLocaleTimeString('it-IT'));
         setSources(priceData.sources);
+        
+        // Aggiorniamo l'ultimo punto della cronologia per riflettere il salto reale
+        setHistory(prev => {
+           const next = [...prev];
+           if (next.length > 0) {
+             next[next.length - 1].kebab = realKebabVal;
+             next[next.length - 1].livestock = realCamelVal;
+             next[next.length - 1].isReal = true;
+           }
+           return next;
+        });
       }
-    } catch (e) { console.error(e); } finally { setIsSyncing(false); }
+    } catch (e) { 
+      console.error("Sync Reality Error:", e); 
+    } finally { 
+      setIsSyncing(false); 
+    }
   };
 
   const buyAsset = (id: string, price: number) => {
