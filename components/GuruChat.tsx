@@ -4,7 +4,7 @@ import { kebabGuru } from '../services/geminiService';
 import { useMarket } from '../context/MarketContext';
 
 const GuruChat: React.FC = () => {
-  const { t } = useMarket();
+  const { setBlackMarketOpen } = useMarket();
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -12,20 +12,28 @@ const GuruChat: React.FC = () => {
   const handleAsk = async () => {
     if (!question.trim()) return;
     setLoading(true);
-    const res = await kebabGuru.askGuru(question);
+    let res = await kebabGuru.askGuru(question);
+    
+    if (res.includes('[ACCESS_BLACK_MARKET]')) {
+      res = res.replace('[ACCESS_BLACK_MARKET]', '').trim();
+      setBlackMarketOpen(true);
+    }
+    
     setAnswer(res);
     setLoading(false);
+    setQuestion('');
   };
 
   return (
-    <div className="bg-gradient-to-br from-orange-600 to-red-700 rounded-3xl shadow-2xl p-8 text-white">
-      <div className="flex items-center gap-4 mb-6">
-        <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-3xl shadow-inner">
+    <div className="glass-dark rounded-[40px] p-8 border-orange-500/10 shadow-2xl relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 blur-[60px] rounded-full -mr-16 -mt-16"></div>
+      <div className="flex items-center gap-4 mb-6 relative">
+        <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center text-3xl shadow-lg">
           👳‍♂️
         </div>
         <div>
-          <h2 className="text-2xl font-bold">{t('guru_title')}</h2>
-          <p className="text-orange-100 text-sm">{t('guru_subtitle')}</p>
+          <h2 className="text-xl font-black text-white tracking-tighter uppercase">Visir della Borsa</h2>
+          <p className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Oracolo del Döner Standard</p>
         </div>
       </div>
 
@@ -36,21 +44,21 @@ const GuruChat: React.FC = () => {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAsk()}
-            placeholder={t('guru_placeholder')}
-            className="w-full bg-white/10 border border-white/20 rounded-2xl px-5 py-4 focus:ring-4 focus:ring-white/20 outline-none placeholder:text-orange-200 transition-all text-lg"
+            placeholder="Chiedi il miglior prezzo..."
+            className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:ring-2 focus:ring-orange-500/50 outline-none placeholder:text-gray-600 transition-all text-sm text-white"
           />
           <button
             onClick={handleAsk}
             disabled={loading}
-            className="absolute right-2 top-2 bottom-2 bg-white text-orange-600 px-6 rounded-xl font-bold hover:bg-orange-50 disabled:opacity-50 transition-colors"
+            className="absolute right-2 top-2 bottom-2 bg-orange-600 text-white px-4 rounded-xl font-black text-[10px] uppercase hover:bg-orange-500 disabled:opacity-50 transition-all"
           >
-            {loading ? '...' : t('guru_ask')}
+            {loading ? '...' : 'CHIEDI'}
           </button>
         </div>
 
         {answer && (
-          <div className="bg-white/10 rounded-2xl p-6 border border-white/10 animate-fade-in">
-            <p className="leading-relaxed whitespace-pre-wrap">{answer}</p>
+          <div className="bg-orange-500/5 rounded-2xl p-6 border border-orange-500/20 animate-fade-in">
+            <p className="text-sm italic text-orange-200 leading-relaxed">"{answer}"</p>
           </div>
         )}
       </div>

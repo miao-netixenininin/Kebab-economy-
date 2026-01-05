@@ -3,16 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kebab Economy - Convertitore Euro/Kebab</title>
+    <title>Kebab Economy Pro - Sovereign Wealth Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --soft-orange: #f97316;
+            --soft-bg: #0a0a0c;
+        }
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #fdf8f6;
+            background-color: var(--soft-bg);
+            color: #f8fafc;
+            overflow-x: hidden;
         }
-        @keyframes scroll { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
-        .animate-scroll { animation: scroll 40s linear infinite; }
+        /* Effetto Soft Glass */
+        .glass { 
+            background: rgba(255, 255, 255, 0.02); 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.05); 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass:hover {
+            border-color: rgba(249, 115, 22, 0.2);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        /* Background Mesh Soft */
+        .mesh-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(at 0% 0%, rgba(249, 115, 22, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(220, 38, 38, 0.05) 0px, transparent 50%);
+        }
+        /* Animazioni fluide */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .soft-entry { animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .animate-scroll { animation: scroll 80s linear infinite; }
+        
+        /* Smooth Scale per i pulsanti */
+        .btn-soft {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-soft:active { transform: scale(0.96); }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 20px; }
     </style>
 <script type="importmap">
 {
@@ -28,6 +68,7 @@
 </script>
 </head>
 <body>
+    <div class="mesh-bg"></div>
     <div id="root"></div>
 </body>
 </html>

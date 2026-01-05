@@ -1,143 +1,98 @@
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useMarket } from '../context/MarketContext';
-import { CURRENCY_SYMBOLS, EXCHANGE_RATES } from '../constants';
-
-const CustomTooltip = ({ active, payload, label, currency, language }: any) => {
-  if (active && payload && payload.length) {
-    const isReal = payload[0].payload.isReal;
-    return (
-      <div className="bg-gray-900/95 backdrop-blur-xl p-5 shadow-2xl rounded-3xl border border-white/10 min-w-[220px]">
-        <div className="flex justify-between items-center mb-3 border-b border-white/10 pb-2">
-           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{label}</p>
-           {isReal && <span className="text-[8px] bg-green-500 text-white px-2 py-0.5 rounded-full font-black animate-pulse">LIVE FEED</span>}
-        </div>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-              <span className="text-white text-[10px] font-black uppercase tracking-tight">Kebab Index</span>
-            </div>
-            <span className="text-orange-500 text-sm font-black">
-              {(payload[0].value * EXCHANGE_RATES[currency]).toFixed(2)}{CURRENCY_SYMBOLS[currency]}
-            </span>
-          </div>
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-              <span className="text-white text-[10px] font-black uppercase tracking-tight">Camel Index</span>
-            </div>
-            <span className="text-amber-500 text-sm font-black">
-              {(payload[1].value * EXCHANGE_RATES[currency]).toFixed(0)}{CURRENCY_SYMBOLS[currency]}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
+import { KEBAB_MARKET_ASSETS, LIVESTOCK_ASSETS, KEBAB_FACTORS } from '../constants';
 
 const KebabStats: React.FC = () => {
-  const { history, isRealMode, isSyncing, currency, language, t } = useMarket();
-  const lastPoint = history.length > 0 ? history[history.length - 1] : { kebab: 5, livestock: 2200 };
+  // Fix: homeLocation and setHomeLocation were not defined in MarketContextType. Using buyLocation and setBuyLocation as the primary market display.
+  const { history, buyLocation, setBuyLocation, isRealMode, syncWithReality, isSyncing } = useMarket();
+  const [trackedAsset, setTrackedAsset] = useState(KEBAB_MARKET_ASSETS[0].id);
 
-  // Filtriamo i dati per assicurarci che siano validi per il grafico
-  const chartData = React.useMemo(() => {
-    return history.map(p => ({
-      ...p,
-      kebab: Number(p.kebab.toFixed(2)),
-      livestock: Number(p.livestock.toFixed(0))
-    }));
-  }, [history]);
+  const chartData = useMemo(() => history.map(p => ({
+    time: p.time,
+    value: p[trackedAsset] || 0,
+    isReal: p.isReal
+  })), [history, trackedAsset]);
+
+  const allTrackable = [...KEBAB_MARKET_ASSETS, ...LIVESTOCK_ASSETS.slice(0, 4)];
 
   return (
-    <div className="bg-white rounded-[48px] shadow-2xl p-8 border border-orange-100 flex flex-col relative overflow-hidden h-[600px]">
-      {!isRealMode && !isSyncing && (
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-[4px] z-10 flex items-center justify-center p-8 text-center">
-           <div className="bg-gray-900 p-8 rounded-[40px] shadow-2xl border border-white/10 max-w-xs transform scale-100 hover:scale-105 transition-all">
-              <span className="text-5xl mb-4 block animate-bounce">📡</span>
-              <p className="text-sm font-black text-white uppercase leading-tight mb-2">{t('sync')}</p>
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{t('apiWarning')}</p>
-           </div>
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h2 className="text-2xl font-black text-gray-900 flex items-center gap-2 tracking-tighter uppercase">
-            {t('stats_ticker')}
-          </h2>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`w-2 h-2 rounded-full ${isRealMode ? 'bg-green-500 animate-pulse' : 'bg-gray-300'}`}></span>
-            <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{t('stats_update')}</span>
+    <div className="glass rounded-[32px] p-8 flex flex-col h-[520px] relative overflow-hidden shadow-2xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 gap-4">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+            <h2 className="text-sm font-black text-white uppercase tracking-widest">Market Feed</h2>
+          </div>
+          <div className="flex gap-2">
+             <select 
+               // Fix: Updated to use buyLocation from context
+               value={buyLocation.id}
+               // Fix: Updated to use setBuyLocation from context
+               onChange={(e) => setBuyLocation(KEBAB_FACTORS.LOCATION.find(l => l.id === e.target.value))}
+               className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-[10px] font-bold text-gray-400 outline-none hover:bg-white/10 transition-all"
+             >
+               {KEBAB_FACTORS.LOCATION.map(l => <option key={l.id} value={l.id} className="bg-[#111]">{l.icon} {l.name}</option>)}
+             </select>
+             <select 
+               value={trackedAsset}
+               onChange={(e) => setTrackedAsset(e.target.value)}
+               className="bg-orange-500/10 border border-orange-500/20 rounded-xl px-3 py-1.5 text-[10px] font-bold text-orange-500 outline-none hover:bg-orange-500/20 transition-all"
+             >
+               {allTrackable.map(a => <option key={a.id} value={a.id} className="bg-[#111]">{a.icon} {a.name}</option>)}
+             </select>
           </div>
         </div>
+
+        <button 
+          onClick={syncWithReality} 
+          disabled={isSyncing}
+          className={`px-5 py-2.5 rounded-xl text-[9px] font-black uppercase transition-all duration-500 btn-soft ${isRealMode ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'}`}
+        >
+          {isSyncing ? '📡 Sincronizzazione...' : isRealMode ? '✓ Dati Reali' : 'Sincronizza Gemini'}
+        </button>
       </div>
-      
-      <div className="flex-grow min-h-0 relative">
+
+      <div className="flex-grow opacity-90">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+          <AreaChart data={chartData}>
             <defs>
-              <linearGradient id="colorKebab" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
+              <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#f97316" stopOpacity={0.2}/>
                 <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
               </linearGradient>
-              <linearGradient id="colorCamel" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
-              </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-            <XAxis 
-              dataKey="time" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{fill: '#94a3b8', fontSize: 8, fontWeight: 700}}
-              interval="preserveStartEnd"
+            <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="rgba(255,255,255,0.03)" />
+            <XAxis dataKey="time" hide />
+            <YAxis hide domain={['auto', 'auto']} />
+            <Tooltip 
+              contentStyle={{ background: 'rgba(10,10,12,0.8)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', fontSize: '10px', color: '#fff' }}
+              itemStyle={{ color: '#f97316', fontWeight: '800' }}
+              cursor={{ stroke: 'rgba(249,115,22,0.2)', strokeWidth: 2 }}
             />
-            <YAxis yAxisId="kebab" hide domain={['auto', 'auto']} />
-            <YAxis yAxisId="livestock" hide domain={['auto', 'auto']} />
-            <Tooltip content={<CustomTooltip currency={currency} language={language} />} />
             <Area 
-              yAxisId="kebab"
               type="monotone" 
-              dataKey="kebab" 
+              dataKey="value" 
               stroke="#f97316" 
-              strokeWidth={4}
-              fill="url(#colorKebab)"
-              activeDot={{ r: 6, fill: '#f97316', stroke: '#fff', strokeWidth: 2 }}
-              isAnimationActive={false}
-            />
-            <Area 
-              yAxisId="livestock"
-              type="monotone" 
-              dataKey="livestock" 
-              stroke="#f59e0b" 
-              strokeWidth={3}
-              strokeDasharray="5 5"
-              fill="url(#colorCamel)"
-              activeDot={{ r: 4, fill: '#f59e0b', stroke: '#fff', strokeWidth: 2 }}
-              isAnimationActive={false}
+              strokeWidth={4} 
+              fill="url(#colorVal)" 
+              animationDuration={1500}
+              animationEasing="ease-in-out"
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      
-      <div className="mt-8 grid grid-cols-2 gap-4">
-        <div className="bg-orange-50 p-5 rounded-3xl border border-orange-100 flex flex-col items-center">
-          <div className="text-[9px] font-black text-orange-400 uppercase mb-1">Kebab Index</div>
-          <div className="text-xl font-black text-orange-700 tabular-nums">
-            {(lastPoint.kebab * EXCHANGE_RATES[currency]).toFixed(2)}{CURRENCY_SYMBOLS[currency]}
-          </div>
-        </div>
-        <div className="bg-amber-50 p-5 rounded-3xl border border-amber-100 flex flex-col items-center">
-          <div className="text-[9px] font-black text-amber-500 uppercase mb-1">Camel Value</div>
-          <div className="text-xl font-black text-amber-700 tabular-nums">
-            {(lastPoint.livestock * EXCHANGE_RATES[currency]).toFixed(0)}{CURRENCY_SYMBOLS[currency]}
-          </div>
-        </div>
+
+      <div className="grid grid-cols-2 gap-4 mt-8">
+         <div className="bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+            <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Volatility Status</span>
+            <div className="text-sm font-black text-white mt-1 uppercase tracking-tighter">Stable Flow</div>
+         </div>
+         <div className="bg-white/[0.02] p-4 rounded-2xl border border-white/5">
+            <span className="text-[8px] font-black text-gray-500 uppercase tracking-widest">Market Sentiment</span>
+            <div className="text-sm font-black text-orange-500 mt-1 uppercase tracking-tighter">Bullish Spice</div>
+         </div>
       </div>
     </div>
   );

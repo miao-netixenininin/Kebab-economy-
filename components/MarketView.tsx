@@ -1,262 +1,175 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useMarket } from '../context/MarketContext';
 import { 
   KEBAB_MARKET_ASSETS, 
-  LIVESTOCK_ASSETS, 
+  BLACK_MARKET_ASSETS,
+  LIVESTOCK_ASSETS,
+  BLACK_MARKET_LIVESTOCK,
   INGREDIENT_ASSETS, 
+  BLACK_MARKET_INGREDIENTS,
+  EXCHANGE_RATES, 
+  CURRENCY_SYMBOLS, 
   KEBAB_FACTORS, 
-  CAMEL_FACTORS,
-  CURRENCY_SYMBOLS,
-  EXCHANGE_RATES
+  CRAFTING_RECIPES 
 } from '../constants';
 
 const MarketView: React.FC = () => {
   const { 
-    inventory, getFinalPrice, t, currency, language, buyAsset, sellAsset
+    news, inventory, portions, getFinalPrice, currency, sources, buyAsset, sellAsset, assembleKebab,
+    buyLocation, setBuyLocation, sellLocation, setSellLocation, isBlackMarketOpen
   } = useMarket();
 
-  // Arbitrage Locations
-  const [buyLoc, setBuyLoc] = useState(KEBAB_FACTORS.LOCATION[0]); // Default: Berlin
-  const [sellLoc, setSellLoc] = useState(KEBAB_FACTORS.LOCATION[4]); // Default: NY
+  const currentKebabs = isBlackMarketOpen ? [...KEBAB_MARKET_ASSETS, ...BLACK_MARKET_ASSETS] : KEBAB_MARKET_ASSETS;
+  const currentLivestock = isBlackMarketOpen ? [...LIVESTOCK_ASSETS, ...BLACK_MARKET_LIVESTOCK] : LIVESTOCK_ASSETS;
+  const currentIngredients = isBlackMarketOpen ? [...INGREDIENT_ASSETS, ...BLACK_MARKET_INGREDIENTS] : INGREDIENT_ASSETS;
 
-  // Specs (Meat for Kebab, Gender/Use for Camels)
-  const [kebabSpec, setKebabSpec] = useState({ protein: KEBAB_FACTORS.PROTEIN[0], format: KEBAB_FACTORS.FORMAT[0] });
-  const [camelSpec, setCamelSpec] = useState({ gender: CAMEL_FACTORS.GENDER[0], use: CAMEL_FACTORS.USE[0] });
-
-  // Currently selected assets
-  const [buyKebab, setBuyKebab] = useState(KEBAB_MARKET_ASSETS[0]);
-  const [sellKebab, setSellKebab] = useState(KEBAB_MARKET_ASSETS[0]);
-  const [buyCamel, setBuyCamel] = useState(LIVESTOCK_ASSETS[0]);
-  const [sellCamel, setSellCamel] = useState(LIVESTOCK_ASSETS[0]);
-  const [buyIng, setBuyIng] = useState(INGREDIENT_ASSETS[0]);
-  const [sellIng, setSellIng] = useState(INGREDIENT_ASSETS[0]);
-
-  const displayPrice = (p: number) => (p * EXCHANGE_RATES[currency]).toLocaleString(language, { maximumFractionDigits: 2 }) + CURRENCY_SYMBOLS[currency];
+  const getRecipeStatus = (kebabId: string) => {
+    const recipe = CRAFTING_RECIPES[kebabId];
+    if (!recipe) return [];
+    return Object.entries(recipe).map(([ingId, required]) => {
+      const isPortion = ['meat', 'bread', 'wrap'].includes(ingId);
+      const current = isPortion ? (portions[ingId] || 0) : (inventory[ingId] || 0);
+      // Cast to any to safely check yieldType which exists on some ingredient assets
+      const meta = (currentIngredients as any[]).find(a => (a.id === ingId || a.yieldType === ingId));
+      return { id: ingId, name: meta?.name || ingId, icon: meta?.icon || '📦', required, current, satisfied: current >= required };
+    });
+  };
 
   return (
-    <div className="space-y-12 pb-20 animate-fade-in">
-      {/* MARKET TICKER */}
-      <div className="bg-black py-4 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
-        <div className="flex animate-[scroll_50s_linear_infinite] whitespace-nowrap gap-16 text-white font-black uppercase text-[10px] tracking-[0.2em] px-8">
-          <span className="text-red-500">🚨 ARBITRAGE WATCH: NY-ISTANBUL GAP OPEN</span>
-          {KEBAB_MARKET_ASSETS.slice(0, 4).map(a => (
-            <span key={a.id} className="text-orange-400">{a.icon} {t(a.id)}: {displayPrice(getFinalPrice(a.id, buyLoc, kebabSpec))}</span>
-          ))}
-          <span className="text-amber-500">🐫 CAMEL AUCTIONS HOT IN RIYADH</span>
-          <span className="text-green-500">🧅 ONION FUTURES RISING</span>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 soft-entry">
+      <div className="lg:col-span-8 space-y-12">
+        
+        {/* Market Selectors */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white/[0.02] p-6 rounded-[32px] border border-white/5">
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-white uppercase tracking-widest">Sede d'Acquisto</label>
+            <select 
+              value={buyLocation.id}
+              onChange={(e) => setBuyLocation(KEBAB_FACTORS.LOCATION.find(l => l.id === e.target.value))}
+              className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-gray-300 outline-none transition-all"
+            >
+              {KEBAB_FACTORS.LOCATION.map(l => (
+                <option key={l.id} value={l.id} className="bg-[#111]" disabled={l.id === 'black_market' && !isBlackMarketOpen}>
+                  {l.icon} {l.name} {l.id === 'black_market' && !isBlackMarketOpen ? '(Locked)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black text-white uppercase tracking-widest">Sede di Vendita</label>
+            <select 
+              value={sellLocation.id}
+              onChange={(e) => setSellLocation(KEBAB_FACTORS.LOCATION.find(l => l.id === e.target.value))}
+              className="w-full bg-black/40 border border-white/10 rounded-2xl px-4 py-3 text-sm font-bold text-gray-300 outline-none transition-all"
+            >
+              {KEBAB_FACTORS.LOCATION.map(l => <option key={l.id} value={l.id} className="bg-[#111]">{l.icon} {l.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {isBlackMarketOpen && (
+          <div className="bg-gradient-to-r from-purple-900/40 to-blue-900/40 p-1 rounded-3xl animate-pulse">
+            <div className="bg-black/80 p-6 rounded-[22px] flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <span className="text-3xl">🕶️</span>
+                <div>
+                  <h3 className="text-lg font-black text-purple-400 tracking-tighter uppercase">Deep Web Active</h3>
+                  <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Prices unlocked: 85% discount enabled</p>
+                </div>
+              </div>
+              <div className="text-purple-500/50 text-xs font-mono">X-ACCESS-GRANTED</div>
+            </div>
+          </div>
+        )}
+
+        {/* Master Kebab Catalog */}
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {currentKebabs.map(a => {
+              const bPrice = getFinalPrice(a.id, buyLocation);
+              const sPrice = getFinalPrice(a.id, sellLocation);
+              const recipe = getRecipeStatus(a.id);
+              const craftable = recipe.length > 0 && recipe.every(r => r.satisfied);
+              const isBlack = BLACK_MARKET_ASSETS.some(ba => ba.id === a.id);
+
+              return (
+                <div key={a.id} className={`glass p-8 rounded-[40px] flex flex-col transition-all duration-500 ${isBlack ? 'border-purple-500/40 shadow-[0_0_20px_rgba(168,85,247,0.1)]' : ''}`}>
+                  <div className="flex justify-between items-start mb-6">
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${isBlack ? 'bg-purple-500/10' : 'bg-white/5'}`}>{a.icon}</div>
+                    <div className="text-right">
+                      <h4 className={`text-xl font-black tracking-tighter ${isBlack ? 'text-purple-400' : 'text-white'}`}>{a.name}</h4>
+                      <span className="text-[10px] font-black text-gray-500 uppercase">Stock: {inventory[a.id] || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <div className="bg-white/[0.03] p-3 rounded-2xl border border-white/5 text-center">
+                      <span className="text-[8px] font-black text-gray-500 uppercase block">Buy</span>
+                      <span className="text-sm font-black text-white">{(bPrice * EXCHANGE_RATES[currency]).toFixed(2)}{CURRENCY_SYMBOLS[currency]}</span>
+                    </div>
+                    <div className="bg-white/[0.03] p-3 rounded-2xl border border-white/5 text-center">
+                      <span className="text-[8px] font-black text-gray-500 uppercase block">Sell</span>
+                      <span className="text-sm font-black text-green-500">{(sPrice * EXCHANGE_RATES[currency]).toFixed(2)}{CURRENCY_SYMBOLS[currency]}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {recipe.map(r => (
+                      <div key={r.id} className={`px-2 py-1 rounded-lg border text-[9px] font-bold ${r.satisfied ? 'border-green-500/30 text-green-400 bg-green-500/5' : 'border-red-500/30 text-red-400 bg-red-500/5'}`}>
+                        {r.icon} {r.required} {r.satisfied ? '✓' : '✕'}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-auto space-y-2">
+                    <div className="flex gap-2">
+                      <button onClick={() => buyAsset(a.id, bPrice)} className="flex-grow py-3 bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10">Acquista</button>
+                      <button onClick={() => sellAsset(a.id, sPrice)} className="flex-grow py-3 bg-white/5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-green-500/10 text-green-500">Vendi</button>
+                    </div>
+                    <button onClick={() => assembleKebab(a.id)} disabled={!craftable} className={`w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest ${craftable ? 'bg-orange-600 hover:bg-orange-500 shadow-xl' : 'bg-white/5 text-gray-600 opacity-50 cursor-not-allowed'}`}>
+                      {craftable ? 'Assembla Kebab 🛠️' : 'Ingredienti Insufficienti'}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Ingredients */}
+        <div className="space-y-6">
+          <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest px-2">Raw Goods Market</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {currentIngredients.map(a => {
+              const price = getFinalPrice(a.id, buyLocation);
+              const isBM = BLACK_MARKET_INGREDIENTS.some(i => i.id === a.id);
+              return (
+                <div key={a.id} className={`glass p-4 rounded-3xl flex flex-col items-center gap-2 ${isBM ? 'border-purple-500/30' : ''}`}>
+                  <div className="text-3xl">{a.icon}</div>
+                  <div className="text-[10px] font-black text-white text-center h-8 leading-tight">{a.name}</div>
+                  <span className="text-[10px] font-black text-orange-400">{(price * EXCHANGE_RATES[currency]).toFixed(2)}{CURRENCY_SYMBOLS[currency]}</span>
+                  <button onClick={() => buyAsset(a.id, price)} className="w-full py-1.5 bg-white/5 rounded-xl text-[8px] font-black uppercase">Import</button>
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
-        {/* BUYING TERMINAL */}
-        <div className="flex flex-col gap-8">
-          <div className="bg-white rounded-[48px] p-10 border border-blue-100 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">{t('buyingTerminal')}</h2>
-                <p className="text-[10px] font-bold text-blue-500 uppercase mt-1">Acquista al prezzo locale della sorgente</p>
+      
+      <div className="lg:col-span-4 space-y-8">
+        <div className="glass p-8 rounded-[40px] border-orange-500/10 shadow-2xl sticky top-28">
+          <h2 className="text-sm font-black text-white uppercase tracking-widest mb-8">Intelligence Feed</h2>
+          <div className="space-y-8">
+            {news.map((n, i) => (
+              <div key={i} className="group border-l-2 border-white/5 pl-5 py-1 hover:border-orange-500 transition-all">
+                <h4 className="text-xs font-black text-white leading-tight mb-2 group-hover:text-orange-500">{n.headline}</h4>
+                <p className="text-[10px] text-gray-500 leading-relaxed mb-4">{n.summary}</p>
+                <a href={n.url} target="_blank" rel="noopener noreferrer" className="text-[8px] font-black text-blue-500 uppercase tracking-widest">Intel Source →</a>
               </div>
-              <div className="text-right">
-                <label className="text-[9px] font-black text-gray-400 uppercase block mb-1">{t('location')}</label>
-                <select 
-                  value={buyLoc.id}
-                  onChange={(e) => setBuyLoc(KEBAB_FACTORS.LOCATION.find(l => l.id === e.target.value)!)}
-                  className="bg-blue-50 border-none rounded-xl px-4 py-2 text-xs font-bold outline-none cursor-pointer text-blue-700"
-                >
-                  {KEBAB_FACTORS.LOCATION.map(l => <option key={l.id} value={l.id}>{l.icon} {t(l.id)}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {/* Kebab Buy Section */}
-              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {KEBAB_MARKET_ASSETS.map(a => (
-                    <button key={a.id} onClick={() => setBuyKebab(a)} className={`w-10 h-10 rounded-xl text-xl transition-all shadow-sm ${buyKebab.id === a.id ? 'bg-blue-500 text-white scale-110' : 'bg-white grayscale hover:grayscale-0'}`} title={t(a.id)}>
-                      {a.icon}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex-grow">
-                    <h4 className="text-lg font-black text-gray-800">{t(buyKebab.id)}</h4>
-                    <div className="text-2xl font-black text-blue-600">{displayPrice(getFinalPrice(buyKebab.id, buyLoc, kebabSpec))}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[8px] font-black text-gray-400 uppercase">Carne</label>
-                    <select 
-                      value={kebabSpec.protein.id}
-                      onChange={(e) => setKebabSpec(prev => ({ ...prev, protein: KEBAB_FACTORS.PROTEIN.find(p => p.id === e.target.value)! }))}
-                      className="bg-white border border-blue-100 rounded-lg px-2 py-1 text-[10px] font-black uppercase text-gray-500 outline-none shadow-sm"
-                    >
-                      {KEBAB_FACTORS.PROTEIN.map(p => <option key={p.id} value={p.id}>{p.icon} {t(p.id)}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <button onClick={() => buyAsset(buyKebab.id, getFinalPrice(buyKebab.id, buyLoc, kebabSpec))} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-blue-200 active:scale-95 transition-transform">
-                  {t('buy')}
-                </button>
-              </div>
-
-              {/* Camel Buy Section */}
-              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {LIVESTOCK_ASSETS.map(a => (
-                    <button key={a.id} onClick={() => setBuyCamel(a)} className={`w-10 h-10 rounded-xl text-xl transition-all shadow-sm ${buyCamel.id === a.id ? 'bg-blue-500 text-white scale-110' : 'bg-white grayscale hover:grayscale-0'}`} title={t(a.id)}>
-                      {a.icon}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-grow">
-                    <h4 className="text-lg font-black text-gray-800">{t(buyCamel.id)}</h4>
-                    <div className="text-2xl font-black text-blue-600">{displayPrice(getFinalPrice(buyCamel.id, buyLoc, camelSpec))}</div>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <select 
-                        value={camelSpec.gender.id}
-                        onChange={(e) => setCamelSpec(prev => ({ ...prev, gender: CAMEL_FACTORS.GENDER.find(g => g.id === e.target.value)! }))}
-                        className="bg-white border border-blue-100 rounded-lg px-2 py-1 text-[9px] font-black uppercase text-gray-500 outline-none shadow-sm"
-                      >
-                        {CAMEL_FACTORS.GENDER.map(g => <option key={g.id} value={g.id}>{g.icon} {t(g.id)}</option>)}
-                     </select>
-                     <select 
-                        value={camelSpec.use.id}
-                        onChange={(e) => setCamelSpec(prev => ({ ...prev, use: CAMEL_FACTORS.USE.find(u => u.id === e.target.value)! }))}
-                        className="bg-white border border-blue-100 rounded-lg px-2 py-1 text-[9px] font-black uppercase text-gray-500 outline-none shadow-sm"
-                      >
-                        {CAMEL_FACTORS.USE.map(u => <option key={u.id} value={u.id}>{u.icon} {t(u.id)}</option>)}
-                     </select>
-                  </div>
-                </div>
-                <button onClick={() => buyAsset(buyCamel.id, getFinalPrice(buyCamel.id, buyLoc, camelSpec))} className="w-full bg-blue-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-blue-200 active:scale-95 transition-transform">
-                  {t('buy')}
-                </button>
-              </div>
-
-              {/* Raw Goods Buy Section */}
-              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <div className="text-[9px] font-black text-blue-400 uppercase tracking-widest mb-4">{t('raw_goods')}</div>
-                <div className="grid grid-cols-4 gap-2 mb-4">
-                  {INGREDIENT_ASSETS.map(a => (
-                    <button key={a.id} onClick={() => setBuyIng(a)} className={`w-full aspect-square rounded-xl text-lg flex items-center justify-center transition-all ${buyIng.id === a.id ? 'bg-blue-500 text-white scale-105 shadow-md' : 'bg-white grayscale hover:grayscale-0 shadow-sm'}`} title={t(a.id)}>
-                      {a.icon}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex-grow">
-                    <h4 className="text-sm font-black text-gray-800 uppercase">{t(buyIng.id)}</h4>
-                    <div className="text-xl font-black text-blue-600">{displayPrice(getFinalPrice(buyIng.id, buyLoc))}</div>
-                  </div>
-                </div>
-                <button onClick={() => buyAsset(buyIng.id, getFinalPrice(buyIng.id, buyLoc))} className="w-full bg-blue-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-md active:scale-95 transition-transform">
-                  {t('buy')}
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-
-        {/* SELLING TERMINAL */}
-        <div className="flex flex-col gap-8">
-          <div className="bg-white rounded-[48px] p-10 border border-orange-100 shadow-xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-2 h-full bg-orange-500"></div>
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter">{t('sellingTerminal')}</h2>
-                <p className="text-[10px] font-bold text-orange-500 uppercase mt-1">Vendi al prezzo locale della destinazione</p>
-              </div>
-              <div className="text-right">
-                <label className="text-[9px] font-black text-gray-400 uppercase block mb-1">{t('location')}</label>
-                <select 
-                  value={sellLoc.id}
-                  onChange={(e) => setSellLoc(KEBAB_FACTORS.LOCATION.find(l => l.id === e.target.value)!)}
-                  className="bg-orange-50 border-none rounded-xl px-4 py-2 text-xs font-bold outline-none cursor-pointer text-orange-700"
-                >
-                  {KEBAB_FACTORS.LOCATION.map(l => <option key={l.id} value={l.id}>{l.icon} {t(l.id)}</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              {/* Kebab Sell Section */}
-              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {KEBAB_MARKET_ASSETS.map(a => (
-                    <button key={a.id} onClick={() => setSellKebab(a)} className={`w-10 h-10 rounded-xl text-xl transition-all shadow-sm ${sellKebab.id === a.id ? 'bg-orange-500 text-white scale-110' : 'bg-white grayscale hover:grayscale-0'}`} title={t(a.id)}>
-                      {a.icon}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex-grow">
-                    <h4 className="text-lg font-black text-gray-800">{t(sellKebab.id)}</h4>
-                    <div className="flex items-center gap-2">
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">In Stock: {inventory[sellKebab.id] || 0}</span>
-                    </div>
-                    <div className="text-2xl font-black text-orange-600">{displayPrice(getFinalPrice(sellKebab.id, sellLoc, kebabSpec))}</div>
-                  </div>
-                </div>
-                <button onClick={() => sellAsset(sellKebab.id, getFinalPrice(sellKebab.id, sellLoc, kebabSpec))} className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-orange-200 active:scale-95 transition-transform disabled:opacity-30 disabled:grayscale" disabled={!inventory[sellKebab.id]}>
-                  {t('sell')}
-                </button>
-              </div>
-
-              {/* Camel Sell Section */}
-              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {LIVESTOCK_ASSETS.map(a => (
-                    <button key={a.id} onClick={() => setSellCamel(a)} className={`w-10 h-10 rounded-xl text-xl transition-all shadow-sm ${sellCamel.id === a.id ? 'bg-orange-500 text-white scale-110' : 'bg-white grayscale hover:grayscale-0'}`} title={t(a.id)}>
-                      {a.icon}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-grow">
-                    <h4 className="text-lg font-black text-gray-800">{t(sellCamel.id)}</h4>
-                    <div className="flex items-center gap-2">
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">In Stock: {inventory[sellCamel.id] || 0}</span>
-                    </div>
-                    <div className="text-2xl font-black text-orange-600">{displayPrice(getFinalPrice(sellCamel.id, sellLoc, camelSpec))}</div>
-                  </div>
-                </div>
-                <button onClick={() => sellAsset(sellCamel.id, getFinalPrice(sellCamel.id, sellLoc, camelSpec))} className="w-full bg-orange-600 text-white py-4 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-orange-200 active:scale-95 transition-transform disabled:opacity-30 disabled:grayscale" disabled={!inventory[sellCamel.id]}>
-                  {t('sell')}
-                </button>
-              </div>
-
-              {/* Raw Goods Sell Section */}
-              <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                <div className="text-[9px] font-black text-orange-400 uppercase tracking-widest mb-4">{t('raw_goods')}</div>
-                <div className="grid grid-cols-4 gap-2 mb-4">
-                  {INGREDIENT_ASSETS.map(a => (
-                    <button key={a.id} onClick={() => setSellIng(a)} className={`w-full aspect-square rounded-xl text-lg flex items-center justify-center transition-all ${sellIng.id === a.id ? 'bg-orange-500 text-white scale-105 shadow-md' : 'bg-white grayscale hover:grayscale-0 shadow-sm'}`} title={t(a.id)}>
-                      {a.icon}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex-grow">
-                    <h4 className="text-sm font-black text-gray-800 uppercase">{t(sellIng.id)}</h4>
-                    <div className="flex items-center gap-2">
-                       <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">In Stock: {inventory[sellIng.id] || 0}</span>
-                    </div>
-                    <div className="text-xl font-black text-orange-600">{displayPrice(getFinalPrice(sellIng.id, sellLoc))}</div>
-                  </div>
-                </div>
-                <button onClick={() => sellAsset(sellIng.id, getFinalPrice(sellIng.id, sellLoc))} className="w-full bg-orange-600 text-white py-3 rounded-xl font-black text-[9px] uppercase shadow-md active:scale-95 transition-transform disabled:opacity-30 disabled:grayscale" disabled={!inventory[sellIng.id]}>
-                  {t('sell')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   );
